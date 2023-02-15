@@ -1,0 +1,142 @@
+{% extends "app/base.html" %}
+{% block content %}
+
+<div class="text-center my-5">
+    <div class="mb-3">
+        <h1>予約カレンダー</h1>
+        <p>{{ start_day }}~{{ end_day }}</p>
+    </div>
+
+
+    <a href="{% url 'reserves_numchange' %}">    <div class="button mx-auto">
+        <button class="btn btn-lg btn-primary btn-block" type="submit">全体予約可能数</button></div></a>
+        <div class="text-center">現在の基本予約数は{{ defa }}人です。</div><br>
+
+    <div class="d-flex mb-2">
+        <div class="mx-3 mr-auto">
+            <a href="{% url 'reserves_mypage' before.year before.month before.day %}" class="btn btn-warning">前週</a>
+        </div>
+        <div class="mx-3">
+            <a href="{% url 'reserves_mypage' next.year next.month next.day %}" class="btn btn-warning">次週</a>
+        </div>
+    </div>
+</div>
+    <div class="mb-3">
+        <table class="table table-bordered bg-light">
+            <thead class="thead-light">
+                <tr style="border-bottom: 3px solid gray;">
+                    <th>
+                        {% for day in days %}
+                        {% if day.weekday == 5 %}
+                        <!-- weekdayメソッドは、曜日を返すメソッド。つまりdayの曜日を返してくれる。weekdayの0が月曜日なので、weekdayの5は土曜日を表している。もし同曜日なら -->
+                        <th scope="col" class="text-primary" style="text-align:center;">{{ day | date:"d(D)" }}<br>
+
+                            <form method="POST" action="{% url 'reserves_holidayall' day.year day.month day.day %}">
+                                {% csrf_token %}
+                                <button class="btn btn-info" type="submit">終日休み</button>
+                            </form>
+
+
+                    </th>
+                        {% elif day.weekday == 6 %}
+                        <th scope="col" class="text-danger" style="text-align:center;">{{ day | date:"d(D)" }}
+                        
+                            <form method="POST" action="{% url 'reserves_holidayall' day.year day.month day.day %}">
+                                {% csrf_token %}
+                                <button class="btn btn-info" type="submit">終日休み</button>
+                            </form>
+                        </th>
+                        {% else %}
+                        <th scope="col" style="text-align:center;">{{ day | date:"d(D)" }}
+                        
+                            <form method="POST" action="{% url 'reserves_holidayall' day.year day.month day.day %}">
+                                {% csrf_token %}
+                                <button class="btn btn-info" type="submit">終日休み</button>
+                            </form>
+                        </th>
+                        <!-- day | date:d(D)とは、day関数を、dateメソッドを利用し、"d(D)"で、日付（曜日）の形で表示させる。"m/d(D)"で記載すれば、月/日(曜日)の形で表示が可能 -->
+                        {% endif %}
+                        {% endfor %}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for hour, schedules in calendar.items %}
+                <!-- calenderは二次元配列なので、二重ループでカレンダーを作成していく。 -->
+                <!-- .itemsメソッドは、キーと値を両方取り出すメソッドです。そのため、calendarのキーをhourに、値をschedulesに格納する。 -->
+                <tr>
+                    <td scope="row">{{ hour }}:00</td>
+                    <!-- scope="row"とは、scopeは見出し対象範囲、rowは、行方向のセルを対象にする -->
+                    {% for datetime, book in schedules.items %}
+                    <!-- schedulesの中には、「行が日付で、列が時間で交わる場所」と「予約状況(Falseがデフォルト)」が存在しているため、datetimeとbookで関数を設定している。 -->
+                    <td class="text-center" style="vertical-align: middle;">
+                        {% if book == "" %}
+                        <form method="POST" action="{% url 'reserves_holiday' datetime.year datetime.month datetime.day hour %}">
+                            {% csrf_token %}
+                            <button class="btn btn-info" type="submit">予約者無し<br>休み設定</button>
+                        </form>
+                        {% elif book == "休" %}
+                            休み設定中
+                        {% else %}
+                            {% if book == None %}
+                            <!-- POSTされて営業ボタンが押されて、Holiday関数の処理(Bookingモデルへの登録)がスタッフ名で時間の登録行われた場合には、 -->
+                            <p class="mb-0">休み</p>
+                            {% else %}
+                        <p class="mb-0 font-weight-bold text-success text-center">
+
+                            {{ book }}人<a href="{% url 'reserves_toreserves' datetime.year datetime.month datetime.day hour %}"><button class="btn btn-success" type="button">予約者</button></a>
+                        </p>
+                            {% endif %}
+                            <form method="POST" action="{% url 'reserves_delete' datetime.year datetime.month datetime.day hour %}">
+                                {% csrf_token %}
+                                <button class="btn btn-danger" type="submit">予約取消</button>
+                            </form>
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="row">
+        <div class="col-md-3 mb-4 text-center mypage">
+            {% if staff_data.user.image %}
+            <img src="{{ staff_data.user.image.url }}" alt="" class="mb-3 img-fluid">
+            {% endif %}
+            <p>{{ staff_data.store.name }}:{{ staff_data.user.first_name }}{{ staff_data.user.last_name }}</p>
+        </div>
+        <div class="col-md-9 mb-4">
+            <div class="card">
+                <div class="card-body px-2 py-1">
+                    <div class="p-4 text-left">
+                        <h3>今週の予約</h3>
+                        <hr>
+                        <table class="table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>お客様</th>
+                                    <th>開始時刻</th>
+                                    <th>終了時刻</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in booking_data %}
+                                {% if booking.first_name != None %}
+                                <tr>
+                                    <td>{{ booking.first_name }}{{ booking.last_name }}</td>
+                                    <td>{{ booking.start }}</td>
+                                    <td>{{ booking.end }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

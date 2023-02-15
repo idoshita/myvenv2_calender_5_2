@@ -1,0 +1,55 @@
+{% extends "app/base.html" %}
+{% block content %}
+
+
+<div class="text-center">
+    <br>
+
+            <div class="card">
+                <div class="card-body px-2 py-1">
+                    <div class="p-4 text-left">
+                        <h3>ご予約状況</h3>
+
+
+                        <p>{{ start_date }}～</p>
+                        <hr>
+                        <h5>
+                        本日の予約人数合計:
+                        {{book_num}}
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        (&nbsp;大人予約数:
+                        {{book_adlut}}
+                        &nbsp;&nbsp;&nbsp;&nbsp;
+                        子供予約数:
+                        {{book_child}}&nbsp;)</h5>
+
+                        <table class="table">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th>お客様</th>
+                                    <th>大人数</th>
+                                    <th>子供数</th>
+                                    <th>電話番号</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for booking in booking_data %}
+                                {% if booking.first_name != None %}
+                                <tr>
+                                    <td>{{ booking.first_name }}{{ booking.last_name }}</td>
+                                    <td>{{ booking.adlutnum }}</td>
+                                    <td>{{ booking.childnum }}</td>
+                                    <td>{{ booking.tel }}</td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+
+</div>
+
+{% endblock %}

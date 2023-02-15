@@ -1,0 +1,89 @@
+{% extends "app/base.html" %}
+{% block content %}
+
+<div class="text-center my-5">
+    <div class="row">
+        <div class="col-md-6 mb-4 text-center calendar">
+            {% if staff_data.user.image %}
+            <img src="{{ staff_data.user.image.url }}" alt="" class="img-fluid">
+            {% endif %}
+        </div>
+
+        <div class="col-md-6 mb-5">
+            <div class="card">
+                <div class="card-body px-2 py-1">
+                    <div class="p-4 text-left">
+                    <h3>{{ staff_data.user.first_name }}{{ staff_data.user.last_name }}</h3>
+                    <hr>
+                    <p>店舗：{{ staff_data.store.name }}</p>
+                    <p>{{ staff_data.user.description | linebreaksbr }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="mb-3">
+        <h1>予約カレンダー</h1>
+        <p>{{ start_day }}~{{ end_day }}</p>
+    </div>
+    <div class="d-flex mb-2">
+        <div class="mx-3 mr-auto">
+            <a href="{% url 'reserves_calendar' staff_data.pk before.year before.month before.day %}" class="btn btn-warning">前週</a>
+        </div>
+        <div class="mx-3">
+            <a href="{% url 'reserves_calendar' staff_data.pk next.year next.month next.day %}" class="btn btn-warning">次週</a>
+        </div>
+    </div>
+    <div class="">
+        <table class="table table-bordered bg-light">
+            <thead class="thead-light">
+                <tr>
+                    <th></th>
+                    {% for day in days %}
+                    {% if day.weekday == 5 %}
+                    <!-- weekdayメソッドは、曜日を返すメソッド。つまりdayの曜日を返してくれる。weekdayの0が月曜日なので、weekdayの5は土曜日を表している。もし同曜日なら -->
+                    <th scope="col" class="text-primary">{{ day | date:"d(D)" }}</th>
+                    {% elif day.weekday == 6 %}
+                    <th scope="col" class="text-danger">{{ day | date:"d(D)" }}</th>
+                    {% else %}
+                    <th scope="col">{{ day | date:"d(D)" }}</th>
+                    <!-- day | date:d(D)とは、day関数を、dateメソッドを利用し、"d(D)"で、日付（曜日）の形で表示させる。"m/d(D)"で記載すれば、月/日(曜日)の形で表示が可能 -->
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for hour, schedules in calendar.items %}
+                <!-- calenderは二次元配列なので、二重ループでカレンダーを作成していく。 -->
+                <!-- .itemsメソッドは、キーと値を両方取り出すメソッドです。そのため、calendarのキーをhourに、値をschedulesに格納する。 -->
+                <tr>
+                    <td scope="row">{{ hour }}:00</td>
+                    <!-- scope="row"とは、scopeは見出し対象範囲、rowは、行方向のセルを対象にする -->
+                    {% for datetime, book in schedules.items %}
+                    <!-- schedulesの中には、「行が日付で、列が時間で交わる場所」と「予約状況(Falseがデフォルト)」が存在しているため、datetimeとbookで関数を設定している。 -->
+                    <td>
+                        {% if datetime <= today %}
+                        <!-- もしdatetime(行が日付で、列が時間で、交わる場所)が今日(today)よりも前の日付であれば -->
+                        -<!-- -（ハイフン）を表示する。 -->
+                        {% elif book %}
+                        <a href="{% url 'reserves_booking' staff_data.pk datetime.year datetime.month datetime.day hour %}">
+                            残り{{ book }}人
+                            <!-- <i class="far fa-circle text-info"></i> -->
+                            <!-- iタグは、英語表記を斜めのフォント(イタリック体)で表示するタグ -->
+                            <!-- fa-circleとは、Font Awesomeという文字絵のアイコンを使っており、●の表記 -->
+                        </a>
+                        {% else %}
+                        &#10005;
+                        <!-- <i class="fas fa-times text-danger"></i> -->
+                        <!-- fa-circleとは、Font Awesomeという文字絵のアイコンを使っており、×の表記 -->
+                        {% endif %}
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

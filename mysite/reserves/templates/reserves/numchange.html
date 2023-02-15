@@ -1,0 +1,133 @@
+{% extends "app/base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+
+<div class="text-center my-5">
+
+    <div class="mb-3">
+        <h1>予約カレンダー</h1>
+        <p>{{ start_day }}~{{ end_day }}</p>
+    </div>
+
+
+
+    <form method="POST" action="{% url 'reserves_numchange' %}">
+        {% csrf_token %}
+        {% render_field formes.defaultvalue class="form-control mx-auto" placeholder="基本予約数変更" style="text-align:center; width:300px;" %}
+        <div class="button mx-auto">
+            <button class="btn btn-lg btn-primary btn-block" type="submit">基本予約数変更</button>
+        </div>
+    </form>
+
+
+
+
+<br><br>
+    <div class="d-flex mb-2">
+        <div class="mx-3 mr-auto">
+            <a href="{% url 'reserves_numchange' before.year before.month before.day %}" class="btn btn-warning">前週</a>
+        </div>
+        <div class="mx-3">
+            <a href="{% url 'reserves_numchange' next.year next.month next.day %}" class="btn btn-warning">次週</a>
+        </div>
+    </div>
+    <div class="">
+        <table class="table table-bordered bg-light">
+            <thead class="thead-light">
+                <tr style="border-bottom: 3px solid gray;">
+                    <th></th>
+                    {% for day in days %}
+                    {% if day.weekday == 5 %}
+                    <!-- weekdayメソッドは、曜日を返すメソッド。つまりdayの曜日を返してくれる。weekdayの0が月曜日なので、weekdayの5は土曜日を表している。もし同曜日なら -->
+                    <th scope="col" class="text-primary">{{ day | date:"d(D)" }}<br>
+
+                        <form method="POST" action="{% url 'reserves_numchange' %}">
+                            {% csrf_token %}
+
+                            {% render_field formee.maxnum class="form-control" placeholder="終日予約数" style="text-align:center;" %}
+                            <input type="hidden" name="startse_date" value="{{day}}">
+                            <div class="button mx-auto">
+                                <button class="btn btn-lg btn-primary btn-block" type="submit">予約数変更</button>
+                            </div>
+                        </form>
+
+
+                    </th>
+                    {% elif day.weekday == 6 %}
+                    <th scope="col" class="text-danger">{{ day | date:"d(D)" }}<br>
+
+                        <form method="POST" action="{% url 'reserves_numchange' %}">
+                            {% csrf_token %}
+
+                            {% render_field formee.maxnum class="form-control" placeholder="終日予約数" style="text-align:center;" %}
+                            <input type="hidden" name="startse_date" value="{{day}}">
+                            <div class="button mx-auto">
+                                <button class="btn btn-lg btn-primary btn-block" type="submit">予約数変更</button>
+                            </div>
+                        </form>
+
+                </th>
+                    {% else %}
+                    <th scope="col">{{ day | date:"d(D)" }}<br>
+
+                        <form method="POST" action="{% url 'reserves_numchange' %}">
+                            {% csrf_token %}
+
+                            {% render_field formee.maxnum class="form-control" placeholder="終日予約数" style="text-align:center;" %}
+                            <input type="hidden" name="startse_date" value="{{day}}">
+                            <div class="button mx-auto">
+                                <button class="btn btn-lg btn-primary btn-block" type="submit">予約数変更</button>
+                            </div>
+                        </form>
+
+
+                </th>
+                    {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for hour, schedules in calendar.items %}
+                <!-- calenderは二次元配列なので、二重ループでカレンダーを作成していく。 -->
+                <!-- .itemsメソッドは、キーと値を両方取り出すメソッドです。そのため、calendarのキーをhourに、値をschedulesに格納する。 -->
+                <tr>
+                    <td scope="row">{{ hour }}:00</td>
+                    <!-- scope="row"とは、scopeは見出し対象範囲、rowは、行方向のセルを対象にする -->
+                    {% for datetime, book in schedules.items %}
+                    <!-- schedulesの中には、「行が日付で、列が時間で交わる場所」と「予約状況(Falseがデフォルト)」が存在しているため、datetimeとbookで関数を設定している。 -->
+                    <td>
+                        {% if datetime <= today %}
+                        <!-- もしdatetime(行が日付で、列が時間で、交わる場所)が今日(today)よりも前の日付であれば -->
+                        -<!-- -（ハイフン）を表示する。 -->
+                        {% elif book %}
+                            {% if book == "休み設定中" %}
+                            {{ book }}
+                            {% else %}
+                            {{ book }}人
+                            {% endif %}
+                        {% endif %}
+                        <br>
+
+                        <form method="POST" action="{% url 'reserves_numchange' %}">
+                            {% csrf_token %}
+
+                            {% render_field forme.maxnum class="form-control" placeholder="日時予約数" style="text-align:center;" %}
+                            <input type="hidden" name="starts_date" value="{{datetime}}">
+                            <input type="hidden" name="starts_hour" value="{{hour}}">
+                            <div class="button mx-auto">
+                                <button class="btn btn-lg btn-info btn-block" type="submit">予約数変更</button>
+                            </div>
+                        </form>
+
+
+
+                    </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
