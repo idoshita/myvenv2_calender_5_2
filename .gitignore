@@ -1,0 +1,7 @@
+myvenv2_calender_5_2
+db.sqlite3
+.vscode
+__pycache__
+*.pyc
+.DS_Store
+.env
